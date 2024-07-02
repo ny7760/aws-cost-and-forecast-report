@@ -1,39 +1,40 @@
 # AWS Cost Report CDK Project
 
-前日までの AWS コストとそれに基づく予測情報を取得し、Slack に通知するプロジェクト。
-AWS CDK を使用して自動デプロイを行う。
+- 前日までの AWS コストとコスト予測を取得し、Slack に通知するプロジェクト。
+- AWS CDK を使用して自動デプロイを行う。
 
 ## プロジェクト概要
 
 - Lambda 関数: AWS のコスト情報を取得し、Slack にメッセージを通知する
 - EventBridge: 毎週金曜日の日本時間 17:00（UTC 8:00）に Lambda 関数を実行するようスケジュールしている。
 
-## 前提条件
+## 動作確認バージョン
 
-- Node.js (v14.x 以上)
-- AWS CDK CLI (v2.x)
-- AWS CLI（設定済み）
-- Python 3.11 以上
+- Node.js (v20.10.0)
+- AWS CDK CLI (v2.147.2)
+- AWS CLI
+- Python 3.11
 
 ## Lambda 機能
 
 - AWS のコストと使用量データの取得
 - コスト予測の取得
 - 利用金額が大きいサービストップ 5 の抽出
-- GMO API から為替レート（USD/JPY）を取得し、円換算金額を計算する
+- GMO API から為替レート（USD/JPY）を取得し、円換算金額を計算
 - 整形されたレポートの Slack への送信
 
 ## セットアップ＆デプロイ
 
-- 依存関係をインストール
+1. 依存関係をインストール
 
 ```bash
 npm install
 ```
 
-- プロジェクト直下に`.env`ファイルを作成
-  - SLACK_WEBHOOK_URL: Slack App の設定を行い、Webhook の URL を入力してください
-  - PROJECT_VALUE: Project タグに設定したい値を入力してください。未指定の場合、`CostReportProject`が設定されます。
+2. プロジェクト直下に`.env`ファイルを作成
+
+- SLACK_WEBHOOK_URL: Slack App の設定を行い、Webhook の URL を入力してください
+- PROJECT_VALUE: Project タグに設定したい値を入力してください。未指定の場合、`CostReportProject`が設定されます。
 
 e.g. `.env` ファイル
 
@@ -42,7 +43,7 @@ SLACK_WEBHOOK_URL=https://xxxx
 PROJECT_VALUE=MyCostReportProject
 ```
 
-- （初回のみ）CDK bootstrap を実行
+3. CDK デプロイ
 
 ```bash
 # （初回のみ）CDK bootstrap を実行
@@ -71,7 +72,8 @@ cdk deploy
 
 ## 注意事項
 
-Lambda 関数は Python（外部ライブラリ利用）のため、`aws-lambda-python-alpha`を利用している
+- Lambda 関数は Python（外部ライブラリ利用）のため、`aws-lambda-python-alpha`を利用している
+- webook の URL が未設定の場合、標準出力にメッセージを出力する
 
 ## 動作の仕様
 

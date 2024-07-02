@@ -7,7 +7,7 @@
 - EventBridge は、 JST で毎週金曜日の 17:00（UTC 8:00）に Lambda 関数を実行するようスケジュールしている
 
 <div align="center">
-    <img src="docs/architecture.png" alt="アーキテクチャ図" width="400" height="250">
+    <img src="https://github.com/ny7760/aws-cost-and-forecast-report/blob/main/docs/architecture.drawio.png" alt="アーキテクチャ図" width="400" height="250">
 </div>
 
 ## 動作確認バージョン

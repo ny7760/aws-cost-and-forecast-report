@@ -193,12 +193,15 @@ def convert_usd_to_jpy(rate: float, amount: float) -> int:
     return int(rate * amount)
 
 
-def get_cost_data(dates: Dates) -> tuple[float, list[CostItem]]:
+def get_cost_data(
+    dates: Dates, include_tax: bool = False
+) -> tuple[float, list[CostItem]]:
     """
     指定された日付範囲のAWSコストデータを取得する。
 
     params:
     - dates: 日付情報を含む辞書
+    - include_tax: Taxをランキングに含めるかどうか（デフォルトはFalse）
 
     return:
     - 総コスト（USD）
@@ -212,6 +215,10 @@ def get_cost_data(dates: Dates) -> tuple[float, list[CostItem]]:
         total_usage = get_aws_cost_usage(dates["start_date"], dates["today"])
 
         costs = usage_by_services.get("ResultsByTime", [{}])[0].get("Groups", [])
+
+        if not include_tax:
+            costs = [cost for cost in costs if cost.get("Keys")[0] != "Tax"]
+
         top5_costs = sorted(
             costs,
             key=lambda x: float(x["Metrics"]["UnblendedCost"]["Amount"]),
@@ -334,8 +341,10 @@ def main(event, context) -> None:
     """
 
     try:
+        include_tax = event.get("include_tax", False)
+
         dates = get_dates()
-        total_cost_usd, top5_costs = get_cost_data(dates)
+        total_cost_usd, top5_costs = get_cost_data(dates, include_tax)
 
         exchange_rate = get_exchange_rate()
         total_cost_jpy = convert_usd_to_jpy(exchange_rate, total_cost_usd)

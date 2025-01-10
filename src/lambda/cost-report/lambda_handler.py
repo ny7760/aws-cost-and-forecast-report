@@ -43,6 +43,23 @@ class Dates(TypedDict):
     is_first_day: bool
 
 
+def get_account_info() -> tuple[str, str]:
+    """
+    AWSアカウントIDとエイリアスを取得する。
+
+    return:
+    アカウントIDとエイリアスのタプル
+    """
+    client = boto3.client("sts")
+    account_id = client.get_caller_identity()["Account"]
+
+    client = boto3.client("iam")
+    aliases = client.list_account_aliases()["AccountAliases"]
+    account_alias = aliases[0] if aliases else "N/A"
+
+    return account_id, account_alias
+
+
 def get_dates() -> Dates:
     """
     現在の日付に基づいて、コスト計算に必要な日付情報を取得する。
@@ -268,6 +285,8 @@ def get_forecast_data(dates: Dates, total_cost_usd: float) -> float:
 
 
 def format_cost_message(
+    account_id: str,
+    account_alias: str,
     display_start_date: str,
     display_end_date: str,
     total_cost_usd: float,
@@ -281,6 +300,8 @@ def format_cost_message(
     コスト情報を整形して Slack 通知用のメッセージ文字列を作成します。
 
     params:
+    - account_id: アカウントID
+    - account_alias: アカウントエイリアス
     - display_start_date: 表示用開始日
     - display_end_date: 表示用終了日
     - total_cost_usd: 総コスト（USD）
@@ -296,6 +317,7 @@ def format_cost_message(
 
     """Format the cost message."""
     message = f"""
+アカウント: {account_alias} ({account_id})
 期間: {display_start_date} - {display_end_date}
 
 利用額: {total_cost_usd:,.2f} USD / {total_cost_jpy:,} 円
@@ -344,6 +366,8 @@ def main(event, context) -> None:
         include_tax = event.get("include_tax", False)
 
         dates = get_dates()
+        account_id, account_alias = get_account_info()
+
         total_cost_usd, top5_costs = get_cost_data(dates, include_tax)
 
         exchange_rate = get_exchange_rate()
@@ -353,6 +377,8 @@ def main(event, context) -> None:
         forecast_cost_jpy = convert_usd_to_jpy(exchange_rate, forecast_cost_usd)
 
         message = format_cost_message(
+            account_id,
+            account_alias,
             dates["start_date"],
             dates["yesterday"],
             total_cost_usd,

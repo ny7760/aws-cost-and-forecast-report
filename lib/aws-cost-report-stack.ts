@@ -39,8 +39,16 @@ export class AwsCostReportStack extends cdk.Stack {
       resources: ["*"], // Cost Explorer API doesn't support resource-level permissions
     });
 
+    // STSとIAMへのアクセス権限を持つカスタムポリシーを作成
+    const identityPolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: ["sts:GetCallerIdentity", "iam:ListAccountAliases"],
+      resources: ["*"],
+    });
+
     // カスタムポリシーをロールに追加
     lambdaRole.addToPolicy(costExplorerPolicy);
+    lambdaRole.addToPolicy(identityPolicy);
 
     const lambdaFn = new PythonFunction(this, "CostReporter", {
       entry: "src/lambda/cost-report",

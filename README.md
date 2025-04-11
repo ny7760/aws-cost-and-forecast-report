@@ -12,7 +12,7 @@
 
 ## 動作確認バージョン
 
-- Node.js (v20.10.0)
+- Node.js (v22.14.0)
 - AWS CDK CLI (v2.147.2)
 - AWS CLI
 - Python 3.11

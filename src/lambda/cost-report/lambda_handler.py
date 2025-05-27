@@ -2,11 +2,11 @@ import calendar
 import datetime
 import logging
 import os
+import time
 from typing import TypedDict
 
 import boto3
 import requests
-from botocore.exceptions import BotoCoreError, ClientError
 
 GMOCOIN_API_ENDPOINT = "https://forex-api.coin.z.com/public/v1/ticker"
 DEFAULT_EXCHANGE_RATE = 150.0
@@ -132,7 +132,12 @@ def get_aws_cost_usage(start_date: str, end_date: str, group_by: bool = False) -
         response = client.get_cost_and_usage(**params)
         logger.info("Successfully retrieved cost and usage data from AWS")
         return response
-    except (BotoCoreError, ClientError) as error:
+    # Handle LimitExceededException to retry the request
+    except client.exceptions.LimitExceededException as error:
+        logger.warning(f"Limit exceeded, retrying: {error}")
+        time.sleep(3)
+        return get_aws_cost_usage(start_date, end_date, group_by)
+    except Exception as error:
         logger.error(f"Failed to retrieve cost and usage data from AWS: {error}")
         raise
 
@@ -162,7 +167,14 @@ def get_aws_cost_forecast(start_date: str, end_date: str) -> dict:
         response = client.get_cost_forecast(**params)
         logger.info("Successfully retrieved cost forecast from AWS")
         return response
-    except (BotoCoreError, ClientError) as error:
+
+    # Handle LimitExceededException to retry the request
+    except client.exceptions.LimitExceededException as error:
+        logger.warning(f"Limit exceeded, retrying: {error}")
+        time.sleep(3)
+        return get_aws_cost_forecast(start_date, end_date)
+
+    except Exception as error:
         logger.error(f"Failed to retrieve cost forecast from AWS: {error}")
         raise
 
